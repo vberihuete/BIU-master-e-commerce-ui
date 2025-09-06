@@ -17,10 +17,10 @@ angular.module('eCommerceApp', ['ngRoute'])
 
     // Hardcoded JSON data for products
     $scope.products = [
-      { id: 1, name: 'Espresso', price: 3.99, image: 'https://via.placeholder.com/150?text=Espresso' },
-      { id: 2, name: 'Cappuccino', price: 4.49, image: 'https://via.placeholder.com/150?text=Cappuccino' },
-      { id: 3, name: 'Croissant', price: 2.99, image: 'https://via.placeholder.com/150?text=Croissant' },
-      { id: 4, name: 'Muffin', price: 3.49, image: 'https://via.placeholder.com/150?text=Muffin' }
+      { id: 1, name: 'Espresso', price: 3.99, image: 'placeholder.jpg' },
+      { id: 2, name: 'Cappuccino', price: 4.49, image: 'placeholder.jpg' },
+      { id: 3, name: 'Croissant', price: 2.99, image: 'placeholder.jpg' },
+      { id: 4, name: 'Muffin', price: 3.49, image: 'placeholder.jpg' }
     ];
 
     /* Commented out API call
