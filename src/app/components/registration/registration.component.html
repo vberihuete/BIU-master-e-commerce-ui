@@ -1,0 +1,338 @@
+<div class="registration-container">
+  <div class="registration-card">
+    <div class="registration-header">
+      <h1>Create Your Account</h1>
+      <p>Join our platform and start your journey with us</p>
+    </div>
+
+    <!-- Alert Messages -->
+    <div class="alerts-container" *ngIf="alerts.length > 0">
+      <div 
+        *ngFor="let alert of alerts" 
+        class="alert"
+        [ngClass]="'alert-' + alert.type"
+        role="alert">
+        <div class="alert-content">
+          <span class="alert-message">{{ alert.message }}</span>
+          <button 
+            type="button" 
+            class="alert-close" 
+            (click)="removeAlert(alert)"
+            aria-label="Close alert">
+            &times;
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Registration Form -->
+    <form [formGroup]="registrationForm" (ngSubmit)="onSubmit()" class="registration-form">
+      
+      <!-- Personal Information Section -->
+      <div class="form-section">
+        <h2>Personal Information</h2>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="firstName">First Name *</label>
+            <input 
+              type="text" 
+              id="firstName"
+              formControlName="firstName"
+              class="form-control"
+              [class.is-invalid]="firstName?.invalid && firstName?.touched"
+              placeholder="Enter your first name">
+            <div class="invalid-feedback" *ngIf="firstName?.invalid && firstName?.touched">
+              {{ getFieldError(firstName, 'First Name') }}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="lastName">Last Name *</label>
+            <input 
+              type="text" 
+              id="lastName"
+              formControlName="lastName"
+              class="form-control"
+              [class.is-invalid]="lastName?.invalid && lastName?.touched"
+              placeholder="Enter your last name">
+            <div class="invalid-feedback" *ngIf="lastName?.invalid && lastName?.touched">
+              {{ getFieldError(lastName, 'Last Name') }}
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email Address *</label>
+          <input 
+            type="email" 
+            id="email"
+            formControlName="email"
+            class="form-control"
+            [class.is-invalid]="email?.invalid && email?.touched"
+            placeholder="Enter your email address">
+          <div class="invalid-feedback" *ngIf="email?.invalid && email?.touched">
+            {{ getFieldError(email, 'Email') }}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="dateOfBirth">Date of Birth *</label>
+          <input 
+            type="date" 
+            id="dateOfBirth"
+            formControlName="dateOfBirth"
+            class="form-control"
+            [class.is-invalid]="dateOfBirth?.invalid && dateOfBirth?.touched">
+          <div class="invalid-feedback" *ngIf="dateOfBirth?.invalid && dateOfBirth?.touched">
+            {{ getFieldError(dateOfBirth, 'Date of Birth') }}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="phoneNumber">Phone Number *</label>
+          <input 
+            type="tel" 
+            id="phoneNumber"
+            formControlName="phoneNumber"
+            class="form-control"
+            [class.is-invalid]="phoneNumber?.invalid && phoneNumber?.touched"
+            placeholder="Enter your phone number">
+          <div class="invalid-feedback" *ngIf="phoneNumber?.invalid && phoneNumber?.touched">
+            {{ getFieldError(phoneNumber, 'Phone Number') }}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="gender">Gender *</label>
+          <select 
+            id="gender"
+            formControlName="gender"
+            class="form-control"
+            [class.is-invalid]="gender?.invalid && gender?.touched">
+            <option value="">Select your gender</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+          </select>
+          <div class="invalid-feedback" *ngIf="gender?.invalid && gender?.touched">
+            {{ getFieldError(gender, 'Gender') }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Security Section -->
+      <div class="form-section">
+        <h2>Security</h2>
+        
+        <div class="form-group">
+          <label for="password">Password *</label>
+          <input 
+            type="password" 
+            id="password"
+            formControlName="password"
+            class="form-control"
+            [class.is-invalid]="password?.invalid && password?.touched"
+            placeholder="Create a strong password">
+          <div class="invalid-feedback" *ngIf="password?.invalid && password?.touched">
+            {{ getFieldError(password, 'Password') }}
+          </div>
+          
+          <!-- Password Strength Indicator -->
+          <div class="password-strength" *ngIf="password?.value && password?.value.length > 0">
+            <div class="strength-bar">
+              <div 
+                class="strength-fill"
+                [style.width]="getPasswordStrengthWidth()"
+                [style.background-color]="getPasswordStrengthColor()">
+              </div>
+            </div>
+            <small class="strength-text" [style.color]="getPasswordStrengthColor()">
+              {{ passwordStrength.feedback }}
+            </small>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="confirmPassword">Confirm Password *</label>
+          <input 
+            type="password" 
+            id="confirmPassword"
+            formControlName="confirmPassword"
+            class="form-control"
+            [class.is-invalid]="confirmPassword?.invalid && confirmPassword?.touched"
+            placeholder="Confirm your password">
+          <div class="invalid-feedback" *ngIf="confirmPassword?.invalid && confirmPassword?.touched">
+            {{ getFieldError(confirmPassword, 'Confirm Password') }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Address Section -->
+      <div class="form-section">
+        <h2>Address Information</h2>
+        
+        <div formGroupName="address">
+          <div class="form-group">
+            <label for="street">Street Address *</label>
+            <input 
+              type="text" 
+              id="street"
+              formControlName="street"
+              class="form-control"
+              [class.is-invalid]="street?.invalid && street?.touched"
+              placeholder="Enter your street address">
+            <div class="invalid-feedback" *ngIf="street?.invalid && street?.touched">
+              {{ getFieldError(street, 'Street Address') }}
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="city">City *</label>
+              <input 
+                type="text" 
+                id="city"
+                formControlName="city"
+                class="form-control"
+                [class.is-invalid]="city?.invalid && city?.touched"
+                placeholder="Enter your city">
+              <div class="invalid-feedback" *ngIf="city?.invalid && city?.touched">
+                {{ getFieldError(city, 'City') }}
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="state">State *</label>
+              <input 
+                type="text" 
+                id="state"
+                formControlName="state"
+                class="form-control"
+                [class.is-invalid]="state?.invalid && state?.touched"
+                placeholder="Enter your state">
+              <div class="invalid-feedback" *ngIf="state?.invalid && state?.touched">
+                {{ getFieldError(state, 'State') }}
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="zipCode">ZIP Code *</label>
+              <input 
+                type="text" 
+                id="zipCode"
+                formControlName="zipCode"
+                class="form-control"
+                [class.is-invalid]="zipCode?.invalid && zipCode?.touched"
+                placeholder="12345 or 12345-6789">
+              <div class="invalid-feedback" *ngIf="zipCode?.invalid && zipCode?.touched">
+                {{ getFieldError(zipCode, 'ZIP Code') }}
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="country">Country *</label>
+              <input 
+                type="text" 
+                id="country"
+                formControlName="country"
+                class="form-control"
+                [class.is-invalid]="country?.invalid && country?.touched"
+                placeholder="Enter your country">
+              <div class="invalid-feedback" *ngIf="country?.invalid && country?.touched">
+                {{ getFieldError(country, 'Country') }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Professional Information Section -->
+      <div class="form-section">
+        <h2>Professional Information</h2>
+        
+        <div class="form-group">
+          <label for="occupation">Occupation *</label>
+          <input 
+            type="text" 
+            id="occupation"
+            formControlName="occupation"
+            class="form-control"
+            [class.is-invalid]="occupation?.invalid && occupation?.touched"
+            placeholder="Enter your occupation">
+          <div class="invalid-feedback" *ngIf="occupation?.invalid && occupation?.touched">
+            {{ getFieldError(occupation, 'Occupation') }}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="salary">Annual Salary (Optional)</label>
+          <input 
+            type="number" 
+            id="salary"
+            formControlName="salary"
+            class="form-control"
+            [class.is-invalid]="salary?.invalid && salary?.touched"
+            placeholder="Enter your annual salary"
+            min="0"
+            max="1000000">
+          <div class="invalid-feedback" *ngIf="salary?.invalid && salary?.touched">
+            {{ getFieldError(salary, 'Salary') }}
+          </div>
+          <small class="form-text">This information is optional and will not be shared publicly.</small>
+        </div>
+      </div>
+
+      <!-- Preferences Section -->
+      <div class="form-section">
+        <h2>Preferences</h2>
+        
+        <div class="form-group checkbox-group">
+          <label class="checkbox-label">
+            <input 
+              type="checkbox" 
+              formControlName="newsletterSubscription"
+              class="checkbox-input">
+            <span class="checkbox-text">Subscribe to our newsletter for updates and special offers</span>
+          </label>
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label class="checkbox-label required">
+            <input 
+              type="checkbox" 
+              formControlName="termsAccepted"
+              class="checkbox-input"
+              [class.is-invalid]="termsAccepted?.invalid && termsAccepted?.touched">
+            <span class="checkbox-text">
+              I agree to the <a href="#" class="link">Terms of Service</a> and <a href="#" class="link">Privacy Policy</a> *
+            </span>
+          </label>
+          <div class="invalid-feedback" *ngIf="termsAccepted?.invalid && termsAccepted?.touched">
+            {{ getFieldError(termsAccepted, 'Terms Acceptance') }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <div class="form-actions">
+        <button 
+          type="submit" 
+          class="btn btn-primary btn-lg"
+          [disabled]="isSubmitting || isLoading"
+          [class.loading]="isLoading">
+          <span *ngIf="!isLoading">Create Account</span>
+          <span *ngIf="isLoading" class="loading-spinner">
+            <span class="spinner"></span>
+            Creating Account...
+          </span>
+        </button>
+        
+        <p class="form-footer">
+          Already have an account? <a href="#" class="link">Sign in here</a>
+        </p>
+      </div>
+    </form>
+  </div>
+</div>
