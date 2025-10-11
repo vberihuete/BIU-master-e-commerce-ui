@@ -6,11 +6,12 @@ import { AuthService } from './services/auth.service';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { User } from './models/user.model';
+import { ChatbotComponent } from './components/chatbot/chatbot.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, ChatbotComponent],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
