@@ -26,7 +26,25 @@ export class ProductsComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.products = this.productService.getProducts();
+    this.loadProducts();
+  }
+
+  loadProducts(): void {
+    this.productService.getAvailableProducts().subscribe({
+      next: (products) => {
+        this.products = products;
+      },
+      error: (error) => {
+        console.error('Error loading products:', error);
+        // Fallback to mock data if backend is not available
+        this.products = [
+          { id: 1, name: 'Espresso', price: 3.99, imageUrl: 'assets/placeholder.jpg', available: true },
+          { id: 2, name: 'Cappuccino', price: 4.49, imageUrl: 'assets/placeholder.jpg', available: true },
+          { id: 3, name: 'Croissant', price: 2.99, imageUrl: 'assets/placeholder.jpg', available: true },
+          { id: 4, name: 'Muffin', price: 3.49, imageUrl: 'assets/placeholder.jpg', available: true }
+        ];
+      }
+    });
   }
 
   addToCart(product: Product): void {

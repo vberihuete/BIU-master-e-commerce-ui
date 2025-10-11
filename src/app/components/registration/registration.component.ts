@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, AsyncValidatorFn, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, ReactiveFormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { Observable, of } from 'rxjs';
-import { debounceTime, switchMap, map, catchError } from 'rxjs/operators';
+import { debounceTime, map } from 'rxjs/operators';
 import { UserService } from '../../services/user.service';
 import { UserRegistrationRequest, AlertMessage } from '../../models/user.model';
 import { CommonModule } from '@angular/common';
@@ -9,7 +10,7 @@ import { CommonModule } from '@angular/common';
 @Component({
   selector: 'app-registration',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './registration.component.html',
   styleUrls: ['./registration.component.css']
 })
@@ -37,33 +38,13 @@ export class RegistrationComponent implements OnInit {
 
   private initializeForm(): void {
     this.registrationForm = this.fb.group({
-      // Personal Information
+      // Backend Required Fields
       firstName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50), Validators.pattern(/^[a-zA-Z\s]+$/)]],
       lastName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50), Validators.pattern(/^[a-zA-Z\s]+$/)]],
-      email: ['', [Validators.required, Validators.email], [this.emailAvailabilityValidator.bind(this)]],
+      email: ['', [Validators.required, Validators.email]],
+      phoneNumber: ['', [Validators.required, Validators.pattern(/^[\+]?[1-9][\d]{0,15}$/)]],
       password: ['', [Validators.required, Validators.minLength(8), this.passwordStrengthValidator.bind(this)]],
       confirmPassword: ['', [Validators.required]],
-      
-      // Personal Details
-      dateOfBirth: ['', [Validators.required, this.ageValidator.bind(this)]],
-      phoneNumber: ['', [Validators.required, Validators.pattern(/^[\+]?[1-9][\d]{0,15}$/)]],
-      gender: ['', [Validators.required]],
-      
-      // Address Information
-      address: this.fb.group({
-        street: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(100)]],
-        city: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
-        state: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
-        zipCode: ['', [Validators.required, Validators.pattern(/^\d{5}(-\d{4})?$/)]],
-        country: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]]
-      }),
-      
-      // Professional Information
-      occupation: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
-      salary: [null, [Validators.min(0), Validators.max(1000000)]],
-      
-      // Preferences
-      newsletterSubscription: [false],
       termsAccepted: [false, [Validators.requiredTrue]]
     }, {
       validators: [this.passwordMatchValidator]
@@ -97,29 +78,6 @@ export class RegistrationComponent implements OnInit {
     return null;
   }
 
-  private ageValidator(control: AbstractControl): ValidationErrors | null {
-    const dateOfBirth = control.value;
-    if (!dateOfBirth) return null;
-
-    const today = new Date();
-    const birthDate = new Date(dateOfBirth);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-
-    if (age < 13) {
-      return { tooYoung: { requiredAge: 13, actualAge: age } };
-    }
-    
-    if (age > 120) {
-      return { tooOld: { maxAge: 120, actualAge: age } };
-    }
-
-    return null;
-  }
 
   private passwordMatchValidator(form: AbstractControl): ValidationErrors | null {
     const password = form.get('password');
@@ -131,19 +89,6 @@ export class RegistrationComponent implements OnInit {
     return null;
   }
 
-  private emailAvailabilityValidator(): AsyncValidatorFn {
-    return (control: AbstractControl): Observable<ValidationErrors | null> => {
-      if (!control.value) {
-        return of(null);
-      }
-      
-      return this.userService.checkEmailAvailability(control.value).pipe(
-        debounceTime(500),
-        map(isAvailable => isAvailable ? null : { emailTaken: true }),
-        catchError(() => of(null))
-      );
-    };
-  }
 
   private calculatePasswordStrength(password: string): void {
     if (!password) {
@@ -178,20 +123,8 @@ export class RegistrationComponent implements OnInit {
   get email() { return this.registrationForm.get('email'); }
   get password() { return this.registrationForm.get('password'); }
   get confirmPassword() { return this.registrationForm.get('confirmPassword'); }
-  get dateOfBirth() { return this.registrationForm.get('dateOfBirth'); }
   get phoneNumber() { return this.registrationForm.get('phoneNumber'); }
-  get gender() { return this.registrationForm.get('gender'); }
-  get occupation() { return this.registrationForm.get('occupation'); }
-  get salary() { return this.registrationForm.get('salary'); }
   get termsAccepted() { return this.registrationForm.get('termsAccepted'); }
-  get address() { return this.registrationForm.get('address'); }
-
-  // Address field getters
-  get street() { return this.address?.get('street') || null; }
-  get city() { return this.address?.get('city') || null; }
-  get state() { return this.address?.get('state') || null; }
-  get zipCode() { return this.address?.get('zipCode') || null; }
-  get country() { return this.address?.get('country') || null; }
 
   // Form Submission
   onSubmit(): void {
@@ -199,11 +132,7 @@ export class RegistrationComponent implements OnInit {
       this.isSubmitting = true;
       this.isLoading = true;
 
-      const formData = this.registrationForm.value;
-      const registrationData: UserRegistrationRequest = {
-        ...formData,
-        dateOfBirth: new Date(formData.dateOfBirth)
-      };
+      const registrationData: UserRegistrationRequest = this.registrationForm.value;
 
       this.userService.registerUser(registrationData).subscribe({
         next: (response) => {
@@ -296,12 +225,6 @@ export class RegistrationComponent implements OnInit {
     }
     if (errors['weakPassword']) {
       return 'Password is too weak. Include uppercase, lowercase, numbers, and special characters.';
-    }
-    if (errors['tooYoung']) {
-      return `You must be at least ${errors['tooYoung'].requiredAge} years old to register.`;
-    }
-    if (errors['tooOld']) {
-      return `Please enter a valid date of birth.`;
     }
     if (errors['passwordMismatch']) {
       return 'Passwords do not match.';

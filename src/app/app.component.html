@@ -6,8 +6,17 @@
       <a routerLink="/home" routerLinkActive="active" class="text-white hover:text-amber-200">Home</a>
       <a routerLink="/products" routerLinkActive="active" class="text-white hover:text-amber-200">Products</a>
       <a routerLink="/products" class="text-white hover:text-amber-200">Cart ({{cartCount$ | async}})</a>
-      <a routerLink="/register" routerLinkActive="active" class="text-white hover:text-amber-200">Register</a>
-      <a routerLink="/about" class="text-white hover:text-amber-200">About</a>
+      <ng-container *ngIf="isAdmin$ | async">
+        <a routerLink="/configuration" routerLinkActive="active" class="text-white hover:text-amber-200">Configuration</a>
+      </ng-container>
+      <ng-container *ngIf="!(isAuthenticated$ | async)">
+        <a routerLink="/login" routerLinkActive="active" class="text-white hover:text-amber-200">Login</a>
+        <a routerLink="/register" routerLinkActive="active" class="text-white hover:text-amber-200">Register</a>
+      </ng-container>
+      <ng-container *ngIf="isAuthenticated$ | async">
+        <span class="text-white">Welcome, {{(currentUser$ | async)?.username}}!</span>
+        <button (click)="logout()" class="text-white hover:text-amber-200 cursor-pointer">Logout</button>
+      </ng-container>
     </div>
   </div>
 </nav>

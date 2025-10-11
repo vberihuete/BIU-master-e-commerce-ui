@@ -1,39 +1,35 @@
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Observable, of, throwError } from 'rxjs';
-import { delay, map } from 'rxjs/operators';
+import { delay, map, catchError } from 'rxjs/operators';
 import { User, UserRegistrationRequest, AlertMessage } from '../models/user.model';
+import { AuthService } from './auth.service';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class UserService {
+  private apiUrl = environment.apiUrl;
   private users: User[] = [];
   private nextId = 1;
 
-  constructor() {
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService
+  ) {
     // Initialize with some mock data for testing
     this.users = [
       {
         id: 1,
+        username: 'john_doe',
         firstName: 'John',
         lastName: 'Doe',
         email: 'john.doe@example.com',
         password: 'hashedpassword',
-        confirmPassword: 'hashedpassword',
-        dateOfBirth: new Date('1990-01-15'),
         phoneNumber: '+1234567890',
-        address: {
-          street: '123 Main St',
-          city: 'New York',
-          state: 'NY',
-          zipCode: '10001',
-          country: 'USA'
-        },
-        salary: 75000,
-        occupation: 'Software Developer',
-        gender: 'male',
-        newsletterSubscription: true,
-        termsAccepted: true,
+        role: 'USER' as const,
+        enabled: true,
         createdAt: new Date(),
         updatedAt: new Date()
       }
@@ -41,72 +37,31 @@ export class UserService {
   }
 
   registerUser(userData: UserRegistrationRequest): Observable<{ success: boolean; message: string; user?: User }> {
-    return new Observable(observer => {
-      // Simulate API call delay
-      setTimeout(() => {
-        // Check if email already exists
-        const existingUser = this.users.find(user => user.email.toLowerCase() === userData.email.toLowerCase());
+    // Use the auth service to register the user with the backend
+    return this.authService.register(userData).pipe(
+      map(() => ({
+        success: true,
+        message: 'Registration successful! Welcome to our platform. You can now log in.',
+        user: undefined
+      })),
+      catchError((error) => {
+        let message = 'Registration failed. Please try again.';
         
-        if (existingUser) {
-          observer.next({
-            success: false,
-            message: 'Email address is already registered. Please use a different email.'
-          });
-          observer.complete();
-          return;
+        if (error.error?.message) {
+          message = error.error.message;
+        } else if (error.status === 409) {
+          message = 'Email address is already registered. Please use a different email.';
+        } else if (error.status === 400) {
+          message = 'Invalid registration data. Please check your inputs.';
         }
 
-        // Validate password match
-        if (userData.password !== userData.confirmPassword) {
-          observer.next({
-            success: false,
-            message: 'Passwords do not match. Please try again.'
-          });
-          observer.complete();
-          return;
-        }
-
-        // Validate age (must be at least 13 years old)
-        const today = new Date();
-        const birthDate = new Date(userData.dateOfBirth);
-        let age = today.getFullYear() - birthDate.getFullYear();
-        const monthDiff = today.getMonth() - birthDate.getMonth();
-        
-        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-          age--;
-        }
-
-        if (age < 13) {
-          observer.next({
-            success: false,
-            message: 'You must be at least 13 years old to register.'
-          });
-          observer.complete();
-          return;
-        }
-
-        // Create new user
-        const newUser: User = {
-          id: this.nextId++,
-          ...userData,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        };
-
-        // Remove confirmPassword before storing
-        const { confirmPassword, ...userToStore } = newUser;
-        const userToStoreWithPassword = { ...userToStore, confirmPassword: '' };
-        
-        this.users.push(userToStoreWithPassword as User);
-
-        observer.next({
-          success: true,
-          message: 'Registration successful! Welcome to our platform.',
-          user: userToStoreWithPassword as User
+        return of({
+          success: false,
+          message: message,
+          user: undefined
         });
-        observer.complete();
-      }, 1500); // Simulate network delay
-    });
+      })
+    );
   }
 
   checkEmailAvailability(email: string): Observable<boolean> {
