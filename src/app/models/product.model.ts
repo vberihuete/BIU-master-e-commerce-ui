@@ -1,6 +1,13 @@
 export interface Product {
-  id: number;
+  id?: number;
   name: string;
+  description?: string;
   price: number;
-  image: string;
+  stockQuantity?: number;
+  category?: string;
+  imageUrl?: string;
+  image?: string;
+  available?: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }

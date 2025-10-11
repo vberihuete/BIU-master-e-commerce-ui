@@ -1,0 +1,223 @@
+<div class="config-container">
+  <div class="config-header">
+    <h1>Product Configuration</h1>
+    <button class="btn btn-primary" (click)="showAddProductForm()" *ngIf="!showProductForm">
+      <span class="icon">+</span> Add New Product
+    </button>
+  </div>
+
+  <!-- Alert Messages -->
+  <div class="alerts-container" *ngIf="alerts.length > 0">
+    <div 
+      *ngFor="let alert of alerts" 
+      class="alert"
+      [ngClass]="'alert-' + alert.type"
+      role="alert">
+      <div class="alert-content">
+        <span class="alert-message">{{ alert.message }}</span>
+        <button 
+          type="button" 
+          class="alert-close" 
+          (click)="removeAlert(alert)"
+          aria-label="Close alert">
+          &times;
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Product Form -->
+  <div class="product-form-container" *ngIf="showProductForm">
+    <div class="form-card">
+      <div class="form-header">
+        <h2>{{ editingProduct ? 'Edit Product' : 'Add New Product' }}</h2>
+        <button class="btn-close" (click)="cancelForm()">&times;</button>
+      </div>
+
+      <form [formGroup]="productForm" (ngSubmit)="onSubmit()">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="name">Product Name *</label>
+            <input 
+              type="text" 
+              id="name"
+              formControlName="name"
+              class="form-control"
+              [class.is-invalid]="name?.invalid && name?.touched"
+              placeholder="Enter product name">
+            <div class="invalid-feedback" *ngIf="name?.invalid && name?.touched">
+              {{ getFieldError('name') }}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="category">Category *</label>
+            <input 
+              type="text" 
+              id="category"
+              formControlName="category"
+              class="form-control"
+              [class.is-invalid]="category?.invalid && category?.touched"
+              placeholder="e.g., Coffee, Pastries, Beverages">
+            <div class="invalid-feedback" *ngIf="category?.invalid && category?.touched">
+              {{ getFieldError('category') }}
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea 
+            id="description"
+            formControlName="description"
+            class="form-control"
+            [class.is-invalid]="description?.invalid && description?.touched"
+            placeholder="Enter product description"
+            rows="3"></textarea>
+          <div class="invalid-feedback" *ngIf="description?.invalid && description?.touched">
+            {{ getFieldError('description') }}
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="price">Price ($) *</label>
+            <input 
+              type="number" 
+              id="price"
+              formControlName="price"
+              class="form-control"
+              [class.is-invalid]="price?.invalid && price?.touched"
+              placeholder="0.00"
+              step="0.01"
+              min="0">
+            <div class="invalid-feedback" *ngIf="price?.invalid && price?.touched">
+              {{ getFieldError('price') }}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="stockQuantity">Stock Quantity *</label>
+            <input 
+              type="number" 
+              id="stockQuantity"
+              formControlName="stockQuantity"
+              class="form-control"
+              [class.is-invalid]="stockQuantity?.invalid && stockQuantity?.touched"
+              placeholder="0"
+              min="0">
+            <div class="invalid-feedback" *ngIf="stockQuantity?.invalid && stockQuantity?.touched">
+              {{ getFieldError('stockQuantity') }}
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="imageUrl">Image URL</label>
+          <input 
+            type="text" 
+            id="imageUrl"
+            formControlName="imageUrl"
+            class="form-control"
+            [class.is-invalid]="imageUrl?.invalid && imageUrl?.touched"
+            placeholder="https://example.com/image.jpg">
+          <div class="invalid-feedback" *ngIf="imageUrl?.invalid && imageUrl?.touched">
+            {{ getFieldError('imageUrl') }}
+          </div>
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label class="checkbox-label">
+            <input 
+              type="checkbox" 
+              formControlName="available"
+              class="checkbox-input">
+            <span class="checkbox-text">Product is available for purchase</span>
+          </label>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" (click)="cancelForm()">
+            Cancel
+          </button>
+          <button 
+            type="submit" 
+            class="btn btn-primary"
+            [disabled]="isSubmitting">
+            <span *ngIf="!isSubmitting">{{ editingProduct ? 'Update Product' : 'Create Product' }}</span>
+            <span *ngIf="isSubmitting">Saving...</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Products List -->
+  <div class="products-section" *ngIf="!showProductForm">
+    <div class="loading" *ngIf="isLoading">
+      <div class="spinner"></div>
+      <p>Loading products...</p>
+    </div>
+
+    <div class="products-table" *ngIf="!isLoading">
+      <table *ngIf="products.length > 0">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Price</th>
+            <th>Stock</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let product of products">
+            <td>{{ product.id }}</td>
+            <td>
+              <div class="product-info">
+                <img [src]="product.imageUrl || product.image || 'assets/placeholder.jpg'" 
+                     [alt]="product.name"
+                     class="product-thumbnail">
+                <span>{{ product.name }}</span>
+              </div>
+            </td>
+            <td>{{ product.category || 'N/A' }}</td>
+            <td class="price">${{ product.price.toFixed(2) }}</td>
+            <td>
+              <span class="stock-badge" [class.low-stock]="(product.stockQuantity || 0) < 10">
+                {{ product.stockQuantity || 0 }}
+              </span>
+            </td>
+            <td>
+              <span class="status-badge" [class.available]="product.available !== false" [class.unavailable]="product.available === false">
+                {{ product.available !== false ? 'Available' : 'Unavailable' }}
+              </span>
+            </td>
+            <td class="actions">
+              <button class="btn-icon btn-edit" (click)="showEditProductForm(product)" title="Edit">
+                ✏️
+              </button>
+              <button class="btn-icon btn-stock" (click)="updateStock(product)" title="Update Stock">
+                📦
+              </button>
+              <button class="btn-icon btn-delete" (click)="deleteProduct(product)" title="Delete">
+                🗑️
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="empty-state" *ngIf="products.length === 0">
+        <div class="empty-icon">📦</div>
+        <h3>No Products Yet</h3>
+        <p>Start by adding your first product to the catalog.</p>
+        <button class="btn btn-primary" (click)="showAddProductForm()">
+          Add Your First Product
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
